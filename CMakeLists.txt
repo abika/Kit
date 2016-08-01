@@ -49,7 +49,8 @@ add_executable(main_EXE
   src/gitinterface.cpp
   src/mainwindow.cpp
   src/widget.cpp
-  src/terminal.cpp)
+  src/terminal.cpp
+  src/branchwidget.cpp)
 
 # find qt libraries for linking
 target_link_libraries(main_EXE
