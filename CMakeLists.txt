@@ -45,9 +45,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 add_executable(main_EXE
-  main.cpp
-  widget.cpp
-  terminal.cpp)
+  src/main.cpp
+  src/widget.cpp
+  src/terminal.cpp)
 
 # find qt libraries for linking
 target_link_libraries(main_EXE

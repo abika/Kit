@@ -2,7 +2,7 @@
 #ifndef TERMINALWIDGET_H
 #define TERMINALWIDGET_H
 
-#include <widget.h>
+#include "widget.h"
 
 #include <signal.h>
 
