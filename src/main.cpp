@@ -1,33 +1,12 @@
 
-#include "terminal.h"
+#include "mainwindow.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QMenuBar>
 
 #include <KAboutData>
-#include <KActionCollection>
 #include <KLocalizedString>
-#include <KStandardAction>
-#include <KXmlGuiWindow>
 
-class MainWindow : public KXmlGuiWindow {
-    Q_OBJECT
-
-  public:
-    MainWindow(QWidget *parent = 0) : KXmlGuiWindow(parent) {
-
-        KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
-
-        TerminalWidget *terminal = new TerminalWidget(this);
-
-        setCentralWidget(terminal);
-
-        setupGUI(Default);
-    }
-
-    // virtual ~MainWindow(){}
-};
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -55,6 +34,3 @@ int main(int argc, char **argv) {
 
     return app.exec();
 }
-
-// needed for Q_OBJECT!
-#include "main.moc"

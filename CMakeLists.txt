@@ -46,6 +46,7 @@ endif()
 
 add_executable(main_EXE
   src/main.cpp
+  src/mainwindow.cpp
   src/widget.cpp
   src/terminal.cpp)
 
