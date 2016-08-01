@@ -1,6 +1,6 @@
-project(kit_project)
+project(kit)
 
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 #set(QT_MIN_VERSION "5.3.0")
 #set(KF5_MIN_VERSION "5.2.0")
 
@@ -38,6 +38,11 @@ add_definitions("-std=c++11")
 # find qt headers in same build dir
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# show all warnings
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic")
+  cmake_policy(SET CMP0063 NEW)
+endif()
 
 add_executable(main_EXE main.cpp)
 
