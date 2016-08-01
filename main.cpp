@@ -9,19 +9,20 @@
 #include <KStandardAction>
 #include <KXmlGuiWindow>
 
-
 class MainWindow : public KXmlGuiWindow {
-Q_OBJECT
+    Q_OBJECT
 
-public:
-    MainWindow(QWidget *parent=0) : KXmlGuiWindow(parent){
+  public:
+    MainWindow(QWidget *parent = 0) : KXmlGuiWindow(parent) {
 
-      KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
+        KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
 
-      setupGUI(Default);
+
+
+        setupGUI(Default);
     }
 
-    //virtual ~MainWindow(){}
+    // virtual ~MainWindow(){}
 };
 
 int main(int argc, char **argv) {
@@ -29,17 +30,13 @@ int main(int argc, char **argv) {
 
     KLocalizedString::setApplicationDomain("Kit");
 
-    KAboutData aboutData(QStringLiteral("kit"), // The program name used internally. (componentName)
-                         i18n("KIT"), // A displayable program name string. (displayName)
-                         QStringLiteral("0.1"), // The program version string. (version)
-                         i18n("Git Gui"), // Short description of what the app does. (shortDescription)
-                         KAboutLicense::GPL, // The license this code is released under
-                         i18n("(c) 2016"), // Copyright Statement
-                         i18n(""), // Optional text shown in the About box.
-                         QStringLiteral("..."), // The program homepage string
-                         QStringLiteral("...")); // The bug report email address
+    KAboutData aboutData(QStringLiteral("kit") /*componentName*/, i18n("Kit") /*displayName*/,
+                         QStringLiteral("0.1"), /*version*/ i18n("Git Gui") /*shortDescription*/,
+                         KAboutLicense::GPL /*license*/, i18n("(c) 2016") /* copyright */,
+                         i18n("") /*about text*/, QStringLiteral("...") /* homepage*/,
+                         QStringLiteral("...")) /*bug report email address*/;
     aboutData.addAuthor(i18n("Alexander Bikadorov"), i18n("Author"), QStringLiteral("abika@???"),
-                         QStringLiteral("http://..."), QStringLiteral("ABika"));
+                        QStringLiteral("http://..."), QStringLiteral("ABika"));
     KAboutData::setApplicationData(aboutData);
 
     QCommandLineParser parser;
@@ -49,7 +46,7 @@ int main(int argc, char **argv) {
     parser.process(app);
     aboutData.processCommandLine(&parser);
 
-    MainWindow* window = new MainWindow();
+    MainWindow *window = new MainWindow();
     window->show();
 
     return app.exec();
