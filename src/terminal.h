@@ -21,10 +21,6 @@
 #include <KShell>
 #include <kde_terminal_interface.h>
 
-class TerminalInterface;
-class QVBoxLayout;
-class QWidget;
-
 namespace KIO {
     class StatJob;
 }
@@ -34,10 +30,13 @@ namespace KParts {
 }
 class KJob;
 
+
 /**
- * @brief Shows the terminal which is synchronized with the URL of the active view.
+ * @brief Shows the terminal.
  *
  * Code borrowed from Dolphin. Copyright (C) 2007-2010 by Peter Penz <peter.penz19@gmail.com>
+ *
+ * TODO remove unneeded code
  */
 class TerminalWidget : public Widget {
     Q_OBJECT
@@ -48,7 +47,10 @@ class TerminalWidget : public Widget {
           m_terminalWidget(0), m_konsolePart(0), m_konsolePartCurrentDirectory(),
           m_sendCdToTerminalHistory() {
         m_layout = new QVBoxLayout(this);
-        m_layout->setMargin(0);
+    }
+
+    QUrl currentDirectory() const {
+        return m_konsolePartCurrentDirectory;
     }
 
     virtual ~TerminalWidget() {}
@@ -58,6 +60,7 @@ class TerminalWidget : public Widget {
         m_terminal = 0;
         emit hideTerminalPanel();
     }
+
     void dockVisibilityChanged() {
         // Only react when the DockWidget itself (not some parent) is hidden.
         // This way we don't respond when e.g. Dolphin is minimized.
@@ -84,7 +87,7 @@ class TerminalWidget : public Widget {
     /**
      * Is emitted if the an URL change is requested.
      */
-    void changeUrl(const QUrl &url);
+    void urlChanged(const QUrl &url);
 
   protected:
     virtual bool urlChanged() {
@@ -144,6 +147,7 @@ class TerminalWidget : public Widget {
 
         m_mostLocalUrlJob = 0;
     }
+
     void slotKonsolePartCurrentDirectoryChanged(const QString &dir) {
         m_konsolePartCurrentDirectory = QDir(dir).canonicalPath();
 
@@ -156,7 +160,7 @@ class TerminalWidget : public Widget {
         }
 
         const QUrl url(QUrl::fromLocalFile(dir));
-        emit changeUrl(url);
+        emit urlChanged(url);
     }
 
   private:
@@ -175,6 +179,7 @@ class TerminalWidget : public Widget {
                     &TerminalWidget::slotMostLocalUrlResult);
         }
     }
+
     void sendCdToTerminal(const QString &dir) {
         if (dir == m_konsolePartCurrentDirectory) {
             m_clearTerminal = false;
