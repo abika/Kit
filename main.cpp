@@ -1,4 +1,6 @@
 
+#include "terminal.h"
+
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QMenuBar>
@@ -17,7 +19,9 @@ class MainWindow : public KXmlGuiWindow {
 
         KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
 
+        TerminalWidget *terminal = new TerminalWidget(this);
 
+        setCentralWidget(terminal);
 
         setupGUI(Default);
     }
