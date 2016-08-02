@@ -1,6 +1,8 @@
 #ifndef BRANCHWIDGET_H
 #define BRANCHWIDGET_H
 
+#include "gitinterface.h"
+
 #include <QDockWidget>
 #include <QListWidget>
 
@@ -15,13 +17,25 @@ class BranchWidget : public QDockWidget {
         setWindowTitle(i18n("Branches"));
 
         branchList = new QListWidget(this);
+        // list->setSelectionMode(QAbstractItemView::SingleSelection);
         setWidget(branchList);
     }
 
   public slots:
-    void update(const QStringList &branches) {
+    void update(const QList<BranchEntry> &branches) {
         branchList->clear();
-        branchList->addItems(branches);
+        for (BranchEntry entry : branches) {
+            QListWidgetItem *item = new QListWidgetItem(entry.name);
+            branchList->addItem(item);
+            if (entry.isHead) {
+                item->setSelected(true);
+            }
+            // TODO add dates
+        }
+        QList<QListWidgetItem*> selectedItems = branchList->selectedItems();
+        if (!selectedItems.isEmpty()) {
+            branchList->scrollToItem(selectedItems.first());
+        }
     }
 
   private:

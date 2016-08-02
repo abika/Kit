@@ -41,8 +41,8 @@ class MainWindow : public KXmlGuiWindow {
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
 
-        connect(gitInterface, SIGNAL(updatedBranches(const QStringList &)),
-                branchWidget, SLOT(update(const QStringList &)));
+        connect(gitInterface, SIGNAL(updatedBranches(const QList<BranchEntry> &)),
+                branchWidget, SLOT(update(const QList<BranchEntry> &)));
 
         // init
         gitInterface->startUpdate(terminal->currentDirectory());
