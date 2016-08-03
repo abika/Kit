@@ -2,14 +2,13 @@
 #ifndef TERMINALWIDGET_H
 #define TERMINALWIDGET_H
 
-#include "widget.h"
-
 #include <signal.h>
 
 #include <QDir>
 #include <QQueue>
 #include <QShowEvent>
 #include <QVBoxLayout>
+#include <QWidget>
 
 #include <KIO/Job>
 #include <KIO/JobUiDelegate>
@@ -33,16 +32,14 @@ class KJob;
 /**
  * @brief Shows the terminal.
  *
- * Code borrowed from Dolphin. Copyright (C) 2007-2010 by Peter Penz <peter.penz19@gmail.com>
- *
- * TODO remove unneeded code
+ * Code modified from Dolphin. Copyright (C) 2007-2010 by Peter Penz <peter.penz19@gmail.com>
  */
-class TerminalWidget : public Widget {
+class TerminalWidget : public QWidget {
     Q_OBJECT
 
   public:
     TerminalWidget(QWidget *parent = 0)
-        : Widget(parent), m_clearTerminal(true), m_mostLocalUrlJob(0), m_layout(0), m_terminal(0),
+        : QWidget(parent), m_clearTerminal(true), m_mostLocalUrlJob(0), m_layout(0), m_terminal(0),
           m_terminalWidget(0), m_konsolePart(0), m_konsolePartCurrentDirectory(),
           m_sendCdToTerminalHistory() {
         m_layout = new QVBoxLayout(this);
@@ -58,57 +55,40 @@ class TerminalWidget : public Widget {
         emit hideTerminalPanel();
     }
 
-    void dockVisibilityChanged() {
-        // Only react when the DockWidget itself (not some parent) is hidden.
-        // This way we don't respond when e.g. Dolphin is minimized.
-        if (parentWidget() && parentWidget()->isHidden() && m_terminal &&
-            (m_terminal->foregroundProcessId() == -1)) {
-            // Make sure that the following "cd /" command will not affect the view.
-            disconnect(m_konsolePart, SIGNAL(currentDirectoryChanged(QString)), this,
-                       SLOT(slotKonsolePartCurrentDirectoryChanged(QString)));
-
-            // Make sure this terminal does not prevent unmounting any removable drives
-            changeDir(QUrl::fromLocalFile(QStringLiteral("/")));
-
-            // Because we have disconnected from the part's currentDirectoryChanged()
-            // signal, we have to update m_konsolePartCurrentDirectory manually.
-            // If this was not done, showing the panel again might not set the part's working
-            // directory correctly.
-            m_konsolePartCurrentDirectory = '/';
-        }
-    }
-
     void updateCommandLine() {
         deleteLineInput();
         m_terminal->sendInput("\n");
+    }
+
+    void changeUrl(const QUrl &url) {
+        if (!url.isValid()) {
+            return;
+        }
+
+        const bool sendInput =
+            m_terminal && (m_terminal->foregroundProcessId() == -1) && isVisible();
+        if (sendInput) {
+            changeDir(url);
+        }
+
+        return;
     }
 
   signals:
     void hideTerminalPanel();
 
     /**
-     * Is emitted if the an URL change is requested.
+     * Is emitted if the current terminal URL changed
      */
     void urlChanged(const QUrl &url);
 
   protected:
-    virtual bool urlChanged() {
-        if (!url().isValid()) {
-            return false;
-        }
-
-        const bool sendInput =
-            m_terminal && (m_terminal->foregroundProcessId() == -1) && isVisible();
-        if (sendInput) {
-            changeDir(url());
-        }
-
-        return true;
-    }
-
+    /**
+     * Initialize on first show
+     */
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE {
         if (event->spontaneous()) {
-            Widget::showEvent(event);
+            QWidget::showEvent(event);
             return;
         }
 
@@ -129,14 +109,13 @@ class TerminalWidget : public Widget {
             }
         }
         if (m_terminal) {
-            m_terminal->showShellInDir(url().toLocalFile());
-            changeDir(url());
+            m_terminal->showShellInDir(".");
             m_terminalWidget->setFocus();
             connect(m_konsolePart, SIGNAL(currentDirectoryChanged(QString)), this,
                     SLOT(slotKonsolePartCurrentDirectoryChanged(QString)));
         }
 
-        Widget::showEvent(event);
+        QWidget::showEvent(event);
     }
 
   private slots:
