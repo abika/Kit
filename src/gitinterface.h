@@ -32,8 +32,6 @@ class GitInterface : public QObject {
                               << "--shell"
                               << "--format=%(HEAD) %(refname:short) %(authordate:iso8601)"
                               << "refs/heads/");
-        if (output.isEmpty())
-            return;
 
         const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
         // parse output; example line: "'*' 'master' '2016-02-11 16:09:38 +0100'"
