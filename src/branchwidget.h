@@ -17,7 +17,6 @@ class BranchWidget : public QDockWidget {
         setWindowTitle(i18n("Branches"));
 
         branchList = new QListWidget(this);
-        // list->setSelectionMode(QAbstractItemView::SingleSelection);
         setWidget(branchList);
     }
 
@@ -26,13 +25,14 @@ class BranchWidget : public QDockWidget {
         branchList->clear();
         for (BranchEntry entry : branches) {
             QListWidgetItem *item = new QListWidgetItem(entry.name);
+            item->setToolTip(i18n("Last commit:") + " " +
+                             entry.date.toString("ddd MMM d yyyy - hh:mm:ss"));
             branchList->addItem(item);
             if (entry.isHead) {
                 item->setSelected(true);
             }
-            // TODO add dates
         }
-        QList<QListWidgetItem*> selectedItems = branchList->selectedItems();
+        QList<QListWidgetItem *> selectedItems = branchList->selectedItems();
         if (!selectedItems.isEmpty()) {
             branchList->scrollToItem(selectedItems.first());
         }
