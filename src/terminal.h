@@ -30,7 +30,6 @@ namespace KParts {
 }
 class KJob;
 
-
 /**
  * @brief Shows the terminal.
  *
@@ -49,9 +48,7 @@ class TerminalWidget : public Widget {
         m_layout = new QVBoxLayout(this);
     }
 
-    QUrl currentDirectory() const {
-        return m_konsolePartCurrentDirectory;
-    }
+    QUrl currentDirectory() const { return m_konsolePartCurrentDirectory; }
 
     virtual ~TerminalWidget() {}
 
@@ -79,6 +76,11 @@ class TerminalWidget : public Widget {
             // directory correctly.
             m_konsolePartCurrentDirectory = '/';
         }
+    }
+
+    void updateCommandLine() {
+        deleteLineInput();
+        m_terminal->sendInput("\n");
     }
 
   signals:
@@ -187,14 +189,7 @@ class TerminalWidget : public Widget {
         }
 
         if (!m_clearTerminal) {
-            // The TerminalV2 interface does not provide a way to delete the
-            // current line before sending a new input. This is mandatory,
-            // otherwise sending a 'cd x' to a existing 'rm -rf *' might
-            // result in data loss. As workaround SIGINT is send.
-            const int processId = m_terminal->terminalProcessId();
-            if (processId > 0) {
-                kill(processId, SIGINT);
-            }
+            deleteLineInput();
         }
 
         m_terminal->sendInput(" cd " + KShell::quoteArg(dir) + '\n');
@@ -208,6 +203,17 @@ class TerminalWidget : public Widget {
         if (m_clearTerminal) {
             m_terminal->sendInput(QStringLiteral(" clear\n"));
             m_clearTerminal = false;
+        }
+    }
+
+    void deleteLineInput() {
+        // The TerminalV2 interface does not provide a way to delete the
+        // current line before sending a new input. This is mandatory,
+        // otherwise sending a 'cd x' to a existing 'rm -rf *' might
+        // result in data loss. As workaround SIGINT is send.
+        const int processId = m_terminal->terminalProcessId();
+        if (processId > 0) {
+            kill(processId, SIGINT);
         }
     }
 

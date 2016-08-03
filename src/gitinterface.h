@@ -24,9 +24,6 @@ class GitInterface : public QObject {
   public:
     explicit GitInterface(QObject *parent = 0) : QObject(parent), m_lastUrl() {}
 
-  signals:
-    void updatedBranches(const QList<BranchEntry> &branches);
-
   public slots:
     void startUpdate(const QUrl &url) {
         m_lastUrl = url;
@@ -60,8 +57,14 @@ class GitInterface : public QObject {
 
         // TODO show error output
 
+        emit repoChanged();
+
         startUpdate(m_lastUrl);
     }
+
+signals:
+  void updatedBranches(const QList<BranchEntry> &branches);
+  void repoChanged();
 
   private:
     static QStringList argStart(const QUrl &url) {

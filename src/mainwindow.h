@@ -33,6 +33,7 @@ class MainWindow : public KXmlGuiWindow {
         TerminalWidget *terminal = new TerminalWidget(this);
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
+        connect(gitInterface, SIGNAL(repoChanged()), terminal, SLOT(updateCommandLine()));
         setCentralWidget(terminal);
 
         // dock widgets
