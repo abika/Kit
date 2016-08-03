@@ -16,30 +16,37 @@ class BranchWidget : public QDockWidget {
     BranchWidget(QWidget *parent = 0) : QDockWidget(parent) {
         setWindowTitle(i18n("Branches"));
 
-        branchList = new QListWidget(this);
-        setWidget(branchList);
+        m_branchList = new QListWidget(this);
+        connect(m_branchList, &QListWidget::itemActivated,
+                [=](QListWidgetItem *item) { emit branchChanged(item->text()); });
+
+        setWidget(m_branchList);
     }
 
   public slots:
     void update(const QList<BranchEntry> &branches) {
-        branchList->clear();
+        m_branchList->clear();
         for (BranchEntry entry : branches) {
             QListWidgetItem *item = new QListWidgetItem(entry.name);
             item->setToolTip(i18n("Last commit:") + " " +
                              entry.date.toString("ddd MMM d yyyy - hh:mm:ss"));
-            branchList->addItem(item);
+            m_branchList->addItem(item);
             if (entry.isHead) {
+                // TODO disable user selection
                 item->setSelected(true);
             }
         }
-        QList<QListWidgetItem *> selectedItems = branchList->selectedItems();
+        QList<QListWidgetItem *> selectedItems = m_branchList->selectedItems();
         if (!selectedItems.isEmpty()) {
-            branchList->scrollToItem(selectedItems.first());
+            m_branchList->scrollToItem(selectedItems.first());
         }
     }
 
+  signals:
+    void branchChanged(const QString &);
+
   private:
-    QListWidget *branchList;
+    QListWidget *m_branchList;
 };
 
 #endif // BRANCHWIDGET_H

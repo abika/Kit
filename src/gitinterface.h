@@ -22,45 +22,75 @@ struct BranchEntry {
 class GitInterface : public QObject {
     Q_OBJECT
   public:
-    explicit GitInterface(QObject *parent = 0) : QObject(parent) {}
+    explicit GitInterface(QObject *parent = 0) : QObject(parent), m_lastUrl() {}
 
   signals:
     void updatedBranches(const QList<BranchEntry> &branches);
 
   public slots:
     void startUpdate(const QUrl &url) {
-        QString program = "/usr/bin/git";
-        QStringList arguments;
-        arguments << "-C" << url.toLocalFile() << "for-each-ref"
-                  << "--shell"
-                  << "--format=%(HEAD) %(refname:short) %(authordate:iso8601)"
-                  << "refs/heads/";
+        m_lastUrl = url;
+        QString output =
+            run(argStart(url) << "for-each-ref"
+                              << "--shell"
+                              << "--format=%(HEAD) %(refname:short) %(authordate:iso8601)"
+                              << "refs/heads/");
+        if (output.isEmpty())
+            return;
 
+        const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
+        // parse output; example line: "'*' 'master' '2016-02-11 16:09:38 +0100'"
+        QList<BranchEntry> branchList;
+        for (QString line : branches) {
+            QStringList values = line.split("'", QString::SkipEmptyParts);
+            bool isHead = values[0] == "*";
+            QString name = values[2];
+            QDateTime date = QDateTime::fromString(values[4], Qt::ISODate);
+            branchList.append(BranchEntry(name, date, isHead));
+        }
+
+        emit updatedBranches(branchList);
+    }
+
+    void checkout(const QString &branchName) {
+        run(argStart(m_lastUrl)
+            // TODO does not work<
+            //<< "read-tree" << "-um" << "HEAD" << branchname
+            << "checkout" << branchName);
+
+        // TODO show error output
+
+        startUpdate(m_lastUrl);
+    }
+
+  private:
+    static QStringList argStart(const QUrl &url) {
+        QStringList arguments;
+        arguments << "-C" << url.toLocalFile();
+        return arguments;
+    }
+
+    QString run(const QStringList &arguments) {
         QProcess *gitProcess = new QProcess(this);
-        gitProcess->start(program, arguments, QIODevice::ReadOnly);
+        gitProcess->start("/usr/bin/git", arguments, QIODevice::ReadOnly);
         // TODO blocking
         bool success = gitProcess->waitForFinished(3000);
         if (!success) {
             qDebug() << "process error; prog=" << gitProcess->program()
                      << " args=" << gitProcess->arguments() << " "
                      << " error=" << gitProcess->error();
-            return;
+            return "";
         }
-        QString output = QString::fromUtf8(gitProcess->readAllStandardOutput().data());
-
-        const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
-        // parse output; example line: "'*' 'master' '2016-02-11 16:09:38 +0100'"
-        QList<BranchEntry> branchList;
-        for (QString line : branches) {
-            const QStringList values = line.split("'", QString::SkipEmptyParts);
-            const bool isHead = values[0] == "*";
-            const QString name = values[2];
-            const QDateTime date = QDateTime::fromString(values[4], Qt::ISODate);
-            branchList.append(BranchEntry(name, date, isHead));
+        if (gitProcess->exitCode()) {
+            qDebug() << "process failed; prog=" << gitProcess->program()
+                     << " args=" << gitProcess->arguments() << " "
+                     << " exitCode=" << gitProcess->exitCode()
+                     << " errOutput: " << gitProcess->readAllStandardError();
         }
-
-        emit updatedBranches(branchList);
+        return QString::fromUtf8(gitProcess->readAllStandardOutput().data());
     }
+
+    QUrl m_lastUrl;
 };
 
 Q_DECLARE_METATYPE(BranchEntry)

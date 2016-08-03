@@ -26,23 +26,23 @@ class MainWindow : public KXmlGuiWindow {
 
         KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
 
-        // dock widgets
-        BranchWidget *branchWidget = new BranchWidget(this);
-        // branchList->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-        addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
-        // viewMenu->addAction(branchList->toggleViewAction());
+        // git interface
+        GitInterface *gitInterface = new GitInterface(this);
 
         // terminal
         TerminalWidget *terminal = new TerminalWidget(this);
-        setCentralWidget(terminal);
-
-        // git interface
-        GitInterface *gitInterface = new GitInterface(this);
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
+        setCentralWidget(terminal);
 
+        // dock widgets
+        BranchWidget *branchWidget = new BranchWidget(this);
         connect(gitInterface, SIGNAL(updatedBranches(const QList<BranchEntry> &)),
                 branchWidget, SLOT(update(const QList<BranchEntry> &)));
+        addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
+
+        // connect commands
+        connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));
 
         // init
         gitInterface->startUpdate(terminal->currentDirectory());
