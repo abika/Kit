@@ -33,7 +33,7 @@ class GitInterface : public QObject {
         QStringList arguments;
         arguments << "-C" << url.toLocalFile() << "for-each-ref"
                   << "--shell"
-                  << "--format=%(HEAD) %(refname:short) %(authordate)"
+                  << "--format=%(HEAD) %(refname:short) %(authordate:iso8601)"
                   << "refs/heads/";
 
         QProcess *gitProcess = new QProcess(this);
@@ -46,17 +46,16 @@ class GitInterface : public QObject {
                      << " error=" << gitProcess->error();
             return;
         }
-
         QString output = QString::fromUtf8(gitProcess->readAllStandardOutput().data());
-        const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
 
-        // parse output; example line: "* master Wed Jul 9 07:11:08 2016 +0200"
+        const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
+        // parse output; example line: "'*' 'master' '2016-02-11 16:09:38 +0100'"
         QList<BranchEntry> branchList;
         for (QString line : branches) {
             const QStringList values = line.split("'", QString::SkipEmptyParts);
             const bool isHead = values[0] == "*";
             const QString name = values[2];
-            const QDateTime date = QDateTime::fromString(values[2], "ddd MMM d hh:mm:ss YYYY ");
+            const QDateTime date = QDateTime::fromString(values[4], Qt::ISODate);
             branchList.append(BranchEntry(name, date, isHead));
         }
 
