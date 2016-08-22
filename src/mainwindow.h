@@ -4,6 +4,7 @@
 
 #include "branchwidget.h"
 #include "gitinterface.h"
+#include "statuswidget.h"
 #include "terminal.h"
 
 #include <QMenuBar>
@@ -13,6 +14,7 @@
 #include <KXmlGuiWindow>
 
 // disable the 'Floatable' feature for dock widgets
+// TODO does not work?
 namespace {
     const QDockWidget::DockWidgetFeatures DefaultDockWidgetFeatures =
         QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable;
@@ -31,6 +33,7 @@ class MainWindow : public KXmlGuiWindow {
 
         // terminal
         TerminalWidget *terminal = new TerminalWidget(this);
+        // TODO update after every command
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
         connect(gitInterface, SIGNAL(repoChanged()), terminal, SLOT(updateCommandLine()));
@@ -38,9 +41,13 @@ class MainWindow : public KXmlGuiWindow {
 
         // dock widgets
         BranchWidget *branchWidget = new BranchWidget(this);
-        connect(gitInterface, SIGNAL(updatedBranches(const QList<BranchEntry> &)),
-                branchWidget, SLOT(update(const QList<BranchEntry> &)));
+        connect(gitInterface, SIGNAL(updatedBranches(QList<BranchEntry>)),
+                branchWidget, SLOT(update(QList<BranchEntry>)));
         addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
+        StatusWidget *statusWidget = new StatusWidget(this);
+        connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
+                statusWidget, SLOT(update(QList<StatusEntry>)));
+        addDockWidget(Qt::BottomDockWidgetArea, statusWidget);
 
         // connect commands
         connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));

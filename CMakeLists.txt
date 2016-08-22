@@ -49,7 +49,9 @@ add_executable(main_EXE
   src/gitinterface.cpp
   src/mainwindow.cpp
   src/terminal.cpp
-  src/branchwidget.cpp)
+  src/branchwidget.cpp
+  src/statuswidget.cpp
+  )
 
 # find qt libraries for linking
 target_link_libraries(main_EXE
@@ -63,6 +65,6 @@ target_link_libraries(main_EXE
     KF5::KIOWidgets
     KF5::KIOFileWidgets
     KF5::Parts
-)
+    )
 
 install(TARGETS main_EXE ${INSTALL_TARGETS_DEFAULT_ARGS})
