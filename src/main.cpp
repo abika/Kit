@@ -14,13 +14,13 @@ int main(int argc, char **argv) {
 
     KLocalizedString::setApplicationDomain("Kit");
 
-    KAboutData aboutData(QStringLiteral("kit") /*componentName*/, i18n("Kit") /*displayName*/,
-                         QStringLiteral("0.1"), /*version*/ i18n("Git Gui") /*shortDescription*/,
-                         KAboutLicense::GPL /*license*/, i18n("(c) 2016") /* copyright */,
-                         i18n("") /*about text*/, QStringLiteral("...") /* homepage*/,
-                         QStringLiteral("...")) /*bug report email address*/;
-    aboutData.addAuthor(i18n("Alexander Bikadorov"), i18n("Author"), QStringLiteral("abika@???"),
-                        QStringLiteral("http://..."), QStringLiteral("ABika"));
+    KAboutData aboutData(QStringLiteral("kit"), i18n("Kit"), QStringLiteral("0.1"),
+                         i18n("A terminal based Git GUI"), KAboutLicense::GPL,
+                         i18n("Copyright (C) 2016 Alexander Bikadorov"),
+                         i18n("") /*about text*/, QStringLiteral("https://github.com/abika/Kit"));
+    aboutData.addAuthor(i18n("Alexander Bikadorov"), i18n("Author"),
+                        QStringLiteral("alex.bikadorov@kdemail.net"), QStringLiteral(""),
+                        QStringLiteral("abika"));
     KAboutData::setApplicationData(aboutData);
 
     QCommandLineParser parser;
