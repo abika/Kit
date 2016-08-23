@@ -41,10 +41,12 @@ class MainWindow : public KXmlGuiWindow {
 
         // dock widgets
         BranchWidget *branchWidget = new BranchWidget(this);
+        branchWidget->setObjectName("branch_widget");
         connect(gitInterface, SIGNAL(updatedBranches(QList<BranchEntry>)),
                 branchWidget, SLOT(update(QList<BranchEntry>)));
         addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
         StatusWidget *statusWidget = new StatusWidget(this);
+        statusWidget->setObjectName("status_widget");
         connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
                 statusWidget, SLOT(update(QList<StatusEntry>)));
         addDockWidget(Qt::BottomDockWidgetArea, statusWidget);
