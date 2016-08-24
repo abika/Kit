@@ -16,8 +16,9 @@ class StatusWidget : public QDockWidget {
         setWindowTitle(i18n("Status"));
 
         m_treeWidget = new QTreeWidget();
+        m_treeWidget->setSelectionMode(QAbstractItemView::NoSelection);
         m_treeWidget->setRootIsDecorated(false);
-        m_treeWidget->setHeaderLabels(QStringList() << i18n("Index") << i18n("Tree")
+        m_treeWidget->setHeaderLabels(QStringList() << i18n("Status") << i18n("Staged")
                                       << i18n("File") << i18n("Old Name"));
         m_treeWidget->header()->setStretchLastSection(false);
         m_treeWidget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -31,7 +32,7 @@ class StatusWidget : public QDockWidget {
         QList<QTreeWidgetItem *> items;
         for (const StatusEntry entry: statusList) {
             QStringList ss;
-            ss << statusText(entry.statusIndex) << statusText(entry.statusTree)
+            ss << statusText(entry.statusTree) << statusText(entry.statusIndex, true)
                << entry.name << entry.renamedFrom;
             items.append(new QTreeWidgetItem(ss));
         }
@@ -39,7 +40,7 @@ class StatusWidget : public QDockWidget {
     }
 
   private:
-    static QString statusText(FileStatus status) {
+    static QString statusText(FileStatus status, bool index = false) {
         switch(status) {
             case STATUS_UNCHANGED: return "";
             case STATUS_MODIFIED: return i18n("Modified");
@@ -48,8 +49,8 @@ class StatusWidget : public QDockWidget {
             case STATUS_RENAMED: return i18n("Renamed");
             case STATUS_COPIED: return i18n("Copied");
             case STATUS_UPDATED: return i18n("Updated");
-            case STATUS_UNTRACKED: return i18n("Untracked");
-            case STATUS_IGNORED: return i18n("(Ignored)");
+            case STATUS_UNTRACKED: return index ? "" : i18n("Untracked");
+            case STATUS_IGNORED: return index ? "" : i18n("(Ignored)");
             default: return "UNKNOWN STATUS";
         }
     }
