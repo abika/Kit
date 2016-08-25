@@ -50,6 +50,8 @@ class MainWindow : public KXmlGuiWindow {
         statusWidget->setObjectName("status_widget");
         connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
                 statusWidget, SLOT(update(QList<StatusEntry>)));
+        statusWidget->setFeatures(statusWidget->features() |
+                                  QDockWidget::DockWidgetVerticalTitleBar);
         addDockWidget(Qt::BottomDockWidgetArea, statusWidget);
 
         // connect commands
