@@ -36,6 +36,7 @@ class MainWindow : public KXmlGuiWindow {
         // TODO update after every command
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
+        connect(terminal, SIGNAL(urlChanged(const QUrl &)), this, SLOT(setTitle(const QUrl &)));
         connect(gitInterface, SIGNAL(repoChanged()), terminal, SLOT(updateCommandLine()));
         setCentralWidget(terminal);
 
@@ -55,9 +56,16 @@ class MainWindow : public KXmlGuiWindow {
         connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));
 
         // init
-        gitInterface->startUpdate(terminal->currentDirectory());
+        const QUrl currentDir = QUrl::fromLocalFile(QDir::currentPath());
+        gitInterface->startUpdate(currentDir);
+        setTitle(currentDir);
 
         setupGUI(Default);
+    }
+
+private slots:
+    void setTitle(const QUrl &url) {
+        setWindowTitle(url.adjusted(QUrl::StripTrailingSlash).fileName());
     }
 
     // virtual ~MainWindow(){}
