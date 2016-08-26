@@ -45,18 +45,23 @@ struct StatusEntry {
 class GitInterface : public QObject {
     Q_OBJECT
   public:
-    explicit GitInterface(QObject *parent = 0) : QObject(parent), m_lastUrl() {}
+    explicit GitInterface(QObject *parent = 0) : QObject(parent), m_lastRoot() {}
 
   public slots:
     void startUpdate(const QUrl &url) {
-        m_lastUrl = url;
+        const QUrl root = gitRoot(url);
+        if (root == m_lastRoot) {
+            // nothing to do
+            return;
+        }
+        m_lastRoot = root;
 
         updateBranches(url);
         updateStatus(url);
     }
 
     void checkout(const QString &branchName) {
-        run(argStart(m_lastUrl)
+        run(argStart(m_lastRoot)
             // TODO does not work<
             //<< "read-tree" << "-um" << "HEAD" << branchname
             << "checkout" << branchName);
@@ -65,7 +70,7 @@ class GitInterface : public QObject {
 
         emit repoChanged();
 
-        startUpdate(m_lastUrl);
+        startUpdate(m_lastRoot);
     }
 
 signals:
@@ -74,8 +79,14 @@ signals:
   void repoChanged();
 
   private:
-
     void updateBranches(const QUrl &url) {
+        QList<BranchEntry> branchList;
+
+        if (url.isEmpty()) {
+            emit updatedBranches(branchList);
+            return;
+        }
+
         const QString output =
             run(argStart(url) << "for-each-ref"
                               << "--shell"
@@ -84,7 +95,6 @@ signals:
 
         const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
         // parse output; example line: "'*' 'master' '2016-02-11 16:09:38 +0100'"
-        QList<BranchEntry> branchList;
         for (const QString line : branches) {
             const QStringList values = line.split("'", QString::SkipEmptyParts);
             const bool isHead = values[0] == "*";
@@ -97,11 +107,17 @@ signals:
     }
 
     void updateStatus(const QUrl &url) {
+        QList<StatusEntry> statusList;
+
+        if (url.isEmpty()) {
+            emit updatedStatus(statusList);
+            return;
+        }
+
         const QString output = run(argStart(url) << "status"
                                    << "-z");
 
         const QStringList lines = output.split(QChar::Tabulation, QString::SkipEmptyParts);
-        QList<StatusEntry> statusList;
         for (int i=0; i < lines.length(); i++) {
             const QString line = lines[i];
             const FileStatus statusIndex = static_cast<FileStatus>(line[0].toLatin1());
@@ -112,6 +128,12 @@ signals:
                                           statusIndex == STATUS_RENAMED ? lines[++i] : QString()));
         }
         emit updatedStatus(statusList);
+    }
+
+    QUrl gitRoot(const QUrl &url) {
+        const QString output = run(argStart(url) << "rev-parse"
+                                   << "--show-toplevel");
+        return QUrl::fromLocalFile(output);
     }
 
     QString run(const QStringList &arguments) {
@@ -153,7 +175,7 @@ signals:
         if (c == 'M') return STATUS_MODIFIED;
     }
 
-    QUrl m_lastUrl;
+    QUrl m_lastRoot;
 };
 
 Q_DECLARE_METATYPE(BranchEntry)
