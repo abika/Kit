@@ -3,6 +3,8 @@
 
 #include <QDateTime>
 #include <QDebug>
+#include <QDir>
+#include <QFileSystemWatcher>
 #include <QObject>
 #include <QProcess>
 #include <QUrl>
@@ -45,23 +47,34 @@ struct StatusEntry {
 class GitInterface : public QObject {
     Q_OBJECT
   public:
-    explicit GitInterface(QObject *parent = 0) : QObject(parent), m_lastRoot() {}
+    explicit GitInterface(QObject *parent = 0) : QObject(parent), m_root(), m_watcher(this) {
+
+        connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &GitInterface::slotFileChanged);
+    }
 
   public slots:
     void startUpdate(const QUrl &url) {
         const QUrl root = gitRoot(url);
-        if (root == m_lastRoot) {
+        if (root == m_root) {
             // nothing to do
             return;
         }
-        m_lastRoot = root;
+        m_root = root;
 
         updateBranches(url);
         updateStatus(url);
+
+        const QStringList watchingFiles = m_watcher.files();
+        if (!watchingFiles.isEmpty()) {
+            m_watcher.removePaths(watchingFiles);
+        }
+        const QDir gitDir = QDir(QDir(m_root.path()).filePath(".git"));
+        m_watcher.addPath(gitDir.filePath("index")); // changes: status
+        m_watcher.addPath(gitDir.filePath("HEAD"));  // changes: branches
     }
 
     void checkout(const QString &branchName) {
-        run(argStart(m_lastRoot)
+        run(argStart(m_root)
             // TODO does not work<
             //<< "read-tree" << "-um" << "HEAD" << branchname
             << "checkout" << branchName);
@@ -70,13 +83,13 @@ class GitInterface : public QObject {
 
         emit repoChanged();
 
-        startUpdate(m_lastRoot);
+        startUpdate(m_root);
     }
 
-signals:
-  void updatedBranches(const QList<BranchEntry> &branches);
-  void updatedStatus(const QList<StatusEntry> &statuses);
-  void repoChanged();
+  signals:
+    void updatedBranches(const QList<BranchEntry> &branches);
+    void updatedStatus(const QList<StatusEntry> &statuses);
+    void repoChanged();
 
   private:
     void updateBranches(const QUrl &url) {
@@ -133,7 +146,7 @@ signals:
     QUrl gitRoot(const QUrl &url) {
         const QString output = run(argStart(url) << "rev-parse"
                                    << "--show-toplevel");
-        return QUrl::fromLocalFile(output);
+        return QUrl::fromLocalFile(output.trimmed());
     }
 
     QString run(const QStringList &arguments) {
@@ -175,7 +188,22 @@ signals:
         if (c == 'M') return STATUS_MODIFIED;
     }
 
-    QUrl m_lastRoot;
+    QUrl m_root; // current git root directory
+    QFileSystemWatcher m_watcher; // watch for changes in .git directory
+
+  private slots:
+    void slotFileChanged(const QString &path) {
+        const QString name = QFileInfo(path).fileName();
+
+        if (name == "index") {
+            updateStatus(m_root);
+        } else if (name == "HEAD") {
+            updateBranches(m_root);
+        }
+
+        // bug in QFileSystemWatcher, file not watched anymore
+        m_watcher.addPath(path);
+    }
 };
 
 Q_DECLARE_METATYPE(BranchEntry)

@@ -33,7 +33,6 @@ class MainWindow : public KXmlGuiWindow {
 
         // terminal
         TerminalWidget *terminal = new TerminalWidget(this);
-        // TODO update after every command
         connect(terminal, SIGNAL(urlChanged(const QUrl &)),
                 gitInterface, SLOT(startUpdate(const QUrl &)));
         connect(terminal, SIGNAL(urlChanged(const QUrl &)), this, SLOT(setTitle(const QUrl &)));
