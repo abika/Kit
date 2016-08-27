@@ -32,7 +32,7 @@ class StatusWidget : public QDockWidget {
         QList<QTreeWidgetItem *> items;
         for (const StatusEntry entry: statusList) {
             QStringList ss;
-            ss << statusText(entry.statusTree) << statusText(entry.statusIndex, true)
+            ss << statusText(entry.treeStatus) << statusText(entry.indexStatus, true)
                << entry.name << entry.renamedFrom;
             items.append(new QTreeWidgetItem(ss));
         }

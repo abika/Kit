@@ -32,13 +32,13 @@ enum FileStatus {
 
 struct StatusEntry {
     QString name;
-    FileStatus statusIndex;
-    FileStatus statusTree;
+    FileStatus indexStatus;
+    FileStatus treeStatus;
     QString renamedFrom;
 
     StatusEntry() {} // needed by Q_DECLARE_METATYPE
     StatusEntry(QString n, FileStatus x, FileStatus y, QString r = QString())
-        : name(n), statusIndex(x), statusTree(y), renamedFrom(r) {}
+        : name(n), indexStatus(x), treeStatus(y), renamedFrom(r) {}
 };
 
 /**

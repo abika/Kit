@@ -8,6 +8,7 @@
 #include "terminal.h"
 
 #include <QMenuBar>
+#include <QStatusBar>
 
 #include <KActionCollection>
 #include <KStandardAction>
@@ -30,6 +31,8 @@ class MainWindow : public KXmlGuiWindow {
 
         // git interface
         GitInterface *gitInterface = new GitInterface(this);
+        connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
+                this, SLOT(updateStatusBar(QList<StatusEntry>)));
 
         // terminal
         TerminalWidget *terminal = new TerminalWidget(this);
@@ -67,6 +70,33 @@ class MainWindow : public KXmlGuiWindow {
 private slots:
     void setTitle(const QUrl &url) {
         setWindowTitle(url.adjusted(QUrl::StripTrailingSlash).fileName());
+    }
+
+    void updateStatusBar(const QList<StatusEntry> &statusList) {
+        int changed = 0, untracked = 0;
+        for (StatusEntry entry: statusList) {
+            switch (entry.indexStatus) {
+               case STATUS_MODIFIED:
+                case STATUS_ADDED:
+                case STATUS_DELETED:
+                case STATUS_RENAMED:
+                case STATUS_COPIED:
+                case STATUS_UPDATED:
+                    changed++;
+                    break;
+                case STATUS_UNTRACKED:
+                    untracked++;
+                case STATUS_UNCHANGED:
+                case STATUS_IGNORED:;
+            }
+        }
+
+        QString text = changed ? i18n("%1 file changes staged for commit", changed) : i18n("Clean");
+        if (untracked) {
+            text += i18n(" | %1 untracked files", untracked);
+        }
+
+        this->statusBar()->showMessage(text);
     }
 
     // virtual ~MainWindow(){}
