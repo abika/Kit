@@ -12,6 +12,7 @@
 
 #include <KActionCollection>
 #include <KStandardAction>
+#include <KStatusNotifierItem>
 #include <KXmlGuiWindow>
 
 // disable the 'Floatable' feature for dock widgets
@@ -59,6 +60,10 @@ class MainWindow : public KXmlGuiWindow {
         // connect commands
         connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));
 
+        // systray icon
+        m_systrayItem = new KStatusNotifierItem(this);
+        m_systrayItem->setIconByName(QStringLiteral("svn-commit"));
+
         // init
         const QUrl currentDir = QUrl::fromLocalFile(QDir::currentPath());
         gitInterface->startUpdate(currentDir);
@@ -98,6 +103,9 @@ private slots:
 
         this->statusBar()->showMessage(text);
     }
+
+private:
+  KStatusNotifierItem *m_systrayItem;
 
     // virtual ~MainWindow(){}
 };
