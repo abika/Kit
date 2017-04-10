@@ -12,7 +12,7 @@
 class StatusWidget : public QDockWidget {
     Q_OBJECT
   public:
-    StatusWidget(QWidget *parent = 0) : QDockWidget(parent) {
+    explicit StatusWidget(QWidget *parent = 0) : QDockWidget(parent) {
         setWindowTitle(i18n("Status"));
 
         m_treeWidget = new QTreeWidget();

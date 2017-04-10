@@ -26,7 +26,7 @@ class MainWindow : public KXmlGuiWindow {
     Q_OBJECT
 
   public:
-    MainWindow(QWidget *parent = 0) : KXmlGuiWindow(parent) {
+    explicit MainWindow(QWidget *parent = 0) : KXmlGuiWindow(parent) {
 
         KStandardAction::quit(qApp, SLOT(quit()), actionCollection());
 
@@ -79,9 +79,9 @@ private slots:
 
     void updateStatusBar(const QList<StatusEntry> &statusList) {
         int changed = 0, untracked = 0;
-        for (StatusEntry entry: statusList) {
+        for (const StatusEntry entry: statusList) {
             switch (entry.indexStatus) {
-               case STATUS_MODIFIED:
+                case STATUS_MODIFIED:
                 case STATUS_ADDED:
                 case STATUS_DELETED:
                 case STATUS_RENAMED:

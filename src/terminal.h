@@ -4,6 +4,7 @@
 
 #include <signal.h>
 
+#include <QDebug>
 #include <QDir>
 #include <QQueue>
 #include <QShowEvent>
@@ -38,7 +39,7 @@ class TerminalWidget : public QWidget {
     Q_OBJECT
 
   public:
-    TerminalWidget(QWidget *parent = 0)
+    explicit TerminalWidget(QWidget *parent = 0)
         : QWidget(parent), m_clearTerminal(true), m_mostLocalUrlJob(0), m_layout(0), m_terminal(0),
           m_terminalWidget(0), m_konsolePart(0), m_konsolePartCurrentDirectory(),
           m_sendCdToTerminalHistory() {
@@ -141,6 +142,7 @@ class TerminalWidget : public QWidget {
         }
 
         const QUrl url(QUrl::fromLocalFile(dir));
+        qDebug() << "URL changed: " << url;
         emit urlChanged(url);
     }
 
@@ -153,7 +155,7 @@ class TerminalWidget : public QWidget {
             sendCdToTerminal(url.toLocalFile());
         } else {
             m_mostLocalUrlJob = KIO::mostLocalUrl(url, KIO::HideProgressInfo);
-            if (m_mostLocalUrlJob->ui()) {
+            if (m_mostLocalUrlJob->uiDelegate()) {
                 KJobWidgets::setWindow(m_mostLocalUrlJob, this);
             }
             connect(m_mostLocalUrlJob, &KIO::StatJob::result, this,

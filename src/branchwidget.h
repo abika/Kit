@@ -9,11 +9,14 @@
 #include <KLocalizedString>
 
 
+/**
+ * @brief GUI widget showing a list of branches
+ */
 class BranchWidget : public QDockWidget {
     Q_OBJECT
 
   public:
-    BranchWidget(QWidget *parent = 0) : QDockWidget(parent) {
+    explicit BranchWidget(QWidget *parent = 0) : QDockWidget(parent) {
         setWindowTitle(i18n("Branches"));
 
         m_branchList = new QListWidget(this);
