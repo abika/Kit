@@ -3,6 +3,7 @@
 #include "gitinterface.h"
 #include "terminal.h"
 #include "widgets/branchwidget.h"
+#include "widgets/stashwidget.h"
 #include "widgets/statuswidget.h"
 
 #include <QMenuBar>
@@ -34,13 +35,20 @@ MainWindow::MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent) {
     connect(gitInterface, SIGNAL(updatedBranches(QList<BranchEntry>)),
             branchWidget, SLOT(update(QList<BranchEntry>)));
     addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
+
     StatusWidget *statusWidget = new StatusWidget(this);
     statusWidget->setObjectName("status_widget");
     connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
             statusWidget, SLOT(update(QList<StatusEntry>)));
-    statusWidget->setFeatures(statusWidget->features() |
-                              QDockWidget::DockWidgetVerticalTitleBar);
+    statusWidget->setFeatures(statusWidget->features() | QDockWidget::DockWidgetVerticalTitleBar);
     addDockWidget(Qt::BottomDockWidgetArea, statusWidget);
+
+    StashWidget *stashWidget = new StashWidget(this);
+    stashWidget->setObjectName("stash_widget");
+    connect(gitInterface, SIGNAL(updatedStashes(QList<StashEntry>)),
+            stashWidget, SLOT(update(QList<StashEntry>)));
+    stashWidget->setFeatures(stashWidget->features() | QDockWidget::DockWidgetVerticalTitleBar);
+    addDockWidget(Qt::BottomDockWidgetArea, stashWidget);
 
     // connect commands
     connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));
