@@ -35,40 +35,40 @@ MainWindow::MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent) {
 
     // git interface
     GitInterface *gitInterface = new GitInterface(this);
-    connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
-            this, SLOT(updateStatusBar(QList<StatusEntry>)));
+    connect(gitInterface, &GitInterface::updatedStatus,
+            this, &MainWindow::updateStatusBar);
 
     // terminal
     TerminalWidget *terminal = new TerminalWidget(this);
-    connect(terminal, SIGNAL(urlChanged(const QUrl &)),
-            gitInterface, SLOT(startUpdate(const QUrl &)));
-    connect(terminal, SIGNAL(urlChanged(const QUrl &)), this, SLOT(setTitle(const QUrl &)));
-    connect(gitInterface, SIGNAL(repoChanged()), terminal, SLOT(updateCommandLine()));
+    connect(terminal, &TerminalWidget::urlChanged,
+            gitInterface, &GitInterface::startUpdate);
+    connect(terminal, &TerminalWidget::urlChanged, this, &MainWindow::setTitle);
+    connect(gitInterface, &GitInterface::repoChanged, terminal, &TerminalWidget::updateCommandLine);
     setCentralWidget(terminal);
 
     // dock widgets
     BranchWidget *branchWidget = new BranchWidget(this);
     branchWidget->setObjectName("branch_widget");
-    connect(gitInterface, SIGNAL(updatedBranches(QList<BranchEntry>)),
-            branchWidget, SLOT(update(QList<BranchEntry>)));
+    connect(gitInterface, &GitInterface::updatedBranches,
+            branchWidget, &BranchWidget::update);
     addDockWidget(Qt::LeftDockWidgetArea, branchWidget);
 
     StatusWidget *statusWidget = new StatusWidget(this);
     statusWidget->setObjectName("status_widget");
-    connect(gitInterface, SIGNAL(updatedStatus(QList<StatusEntry>)),
-            statusWidget, SLOT(update(QList<StatusEntry>)));
+    connect(gitInterface, &GitInterface::updatedStatus,
+            statusWidget, &StatusWidget::update);
     statusWidget->setFeatures(statusWidget->features() | QDockWidget::DockWidgetVerticalTitleBar);
     addDockWidget(Qt::BottomDockWidgetArea, statusWidget);
 
     StashWidget *stashWidget = new StashWidget(this);
     stashWidget->setObjectName("stash_widget");
-    connect(gitInterface, SIGNAL(updatedStashes(QList<StashEntry>)),
-            stashWidget, SLOT(update(QList<StashEntry>)));
+    connect(gitInterface, &GitInterface::updatedStashes,
+            stashWidget, &StashWidget::update);
     stashWidget->setFeatures(stashWidget->features() | QDockWidget::DockWidgetVerticalTitleBar);
     addDockWidget(Qt::BottomDockWidgetArea, stashWidget);
 
     // connect commands
-    connect(branchWidget, SIGNAL(branchChanged(QString)), gitInterface, SLOT(checkout(QString)));
+    connect(branchWidget, &BranchWidget::branchChanged, gitInterface, &GitInterface::checkout);
 
     // systray icon
     m_systrayItem = new KStatusNotifierItem(this);
