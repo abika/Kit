@@ -50,8 +50,8 @@ add_executable(main_EXE
   src/gitinterface.cpp
   src/mainwindow.cpp
   src/terminal.cpp
-  src/branchwidget.cpp
-  src/statuswidget.cpp
+  src/widgets/branchwidget.cpp
+  src/widgets/statuswidget.cpp
   )
 
 # find qt libraries for linking

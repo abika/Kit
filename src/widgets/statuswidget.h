@@ -1,7 +1,7 @@
 #ifndef STATUSWIDGET_H
 #define STATUSWIDGET_H
 
-#include "gitinterface.h"
+#include "../gitinterface.h"
 
 #include <QDockWidget>
 #include <QHeaderView>

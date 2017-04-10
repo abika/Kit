@@ -1,7 +1,7 @@
 #ifndef BRANCHWIDGET_H
 #define BRANCHWIDGET_H
 
-#include "gitinterface.h"
+#include "../gitinterface.h"
 
 #include <QDockWidget>
 #include <QListWidget>

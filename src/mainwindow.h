@@ -2,10 +2,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "branchwidget.h"
 #include "gitinterface.h"
-#include "statuswidget.h"
 #include "terminal.h"
+#include "widgets/branchwidget.h"
+#include "widgets/statuswidget.h"
 
 #include <QMenuBar>
 #include <QStatusBar>
