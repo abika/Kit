@@ -52,6 +52,7 @@ add_executable(main_EXE
   src/terminal.cpp
   src/widgets/branchwidget.cpp
   src/widgets/statuswidget.cpp
+  src/widgets/stashwidget.cpp
   )
 
 # find qt libraries for linking
