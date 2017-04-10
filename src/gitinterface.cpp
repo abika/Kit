@@ -3,7 +3,6 @@
 
 #include <QDebug>
 #include <QDir>
-#include <QProcess>
 
 GitInterface::GitInterface(QObject *parent) : QObject(parent), m_root(), m_watcher(this) {
 
@@ -20,6 +19,7 @@ void GitInterface::startUpdate(const QUrl &url) {
 
     updateBranches(url);
     updateStatus(url);
+    updateStashes(url);
 
     const QStringList watchingFiles = m_watcher.files();
     if (!watchingFiles.isEmpty()) {
@@ -31,8 +31,8 @@ void GitInterface::startUpdate(const QUrl &url) {
 }
 
 void GitInterface::checkout(const QString &branchName) {
-    run(argStart(m_root)
-        // TODO does not work<
+    gitOutput(argStart(m_root)
+        // TODO does not work
         //<< "read-tree" << "-um" << "HEAD" << branchname
         << "checkout" << branchName);
 
@@ -52,7 +52,7 @@ void GitInterface::updateBranches(const QUrl &url) {
     }
 
     const QString output =
-        run(argStart(url) << "for-each-ref"
+        gitOutput(argStart(url) << "for-each-ref"
                           << "--shell"
                           << "--format=%(HEAD) %(refname:short) %(authordate:iso8601)"
                           << "refs/heads/");
@@ -78,8 +78,8 @@ void GitInterface::updateStatus(const QUrl &url) {
         return;
     }
 
-    const QString output = run(argStart(url) << "status"
-                               << "-z");
+    // NOTE: "porcelain" but stable output
+    const QString output = gitOutput(argStart(url) << "status" << "-z");
 
     const QStringList lines = output.split(QChar::Tabulation, QString::SkipEmptyParts);
     for (int i=0; i < lines.length(); i++) {
@@ -94,23 +94,48 @@ void GitInterface::updateStatus(const QUrl &url) {
     emit updatedStatus(statusList);
 }
 
+void GitInterface::updateStashes(const QUrl &url)
+{
+    // NOTE: 'git-stash' is only a shell script.
+    // See https://github.com/git/git/blob/master/git-stash.sh
+
+    QList<StashEntry> stashList;
+
+    if (url.isEmpty()) {
+        emit updatedStashes(stashList);
+        return;
+    }
+
+    // do we have at least one stash?
+    bool noStash = gitExitCode(argStart(url) << "rev-parse" << "--verify" << "refs/stash");
+    if (noStash) {
+        emit updatedStashes(stashList);
+        return;
+    }
+
+    // TODO porcelain
+    const QString output = gitOutput(argStart(url) << "log"
+                               << "--format='%gd' '%gs'"
+                               << "-g" << "--first-parent" <<"-m" << "refs/stash" << "--");
+
+    const QStringList branches = output.split(QRegExp("[\r\n]"), QString::SkipEmptyParts);
+    // parse output; example line: 'stash@{0}' 'WIP on master: 99db58d Separated header'"
+    for (const QString line : branches) {
+        const QStringList values = line.split("'", QString::SkipEmptyParts);
+        stashList.append(StashEntry(values[0], values[2]));
+    }
+
+    emit updatedStashes(stashList);
+}
+
 QUrl GitInterface::gitRoot(const QUrl &url) {
-    const QString output = run(argStart(url) << "rev-parse"
+    const QString output = gitOutput(argStart(url) << "rev-parse"
                                << "--show-toplevel");
     return QUrl::fromLocalFile(output.trimmed());
 }
 
-QString GitInterface::run(const QStringList &arguments) {
-    QProcess *gitProcess = new QProcess(this);
-    gitProcess->start("/usr/bin/git", arguments, QIODevice::ReadOnly);
-    // TODO blocking
-    bool success = gitProcess->waitForFinished(3000);
-    if (!success) {
-        qDebug() << "process error; prog=" << gitProcess->program()
-                 << " args=" << gitProcess->arguments() << " "
-                 << " error=" << gitProcess->error();
-        return "";
-    }
+QString GitInterface::gitOutput(const QStringList &arguments) {
+    QProcess *gitProcess = gitRun(arguments);
     if (gitProcess->exitCode()) {
         qDebug() << "process failed; prog=" << gitProcess->program()
                  << " args=" << gitProcess->arguments() << " "
@@ -120,6 +145,26 @@ QString GitInterface::run(const QStringList &arguments) {
     QByteArray rawOutput = gitProcess->readAllStandardOutput();
     // 'git status -z' divides by \0 character
     return QString::fromUtf8(rawOutput.replace(QChar::Null, QChar::Tabulation));
+}
+
+int GitInterface::gitExitCode(const QStringList &arguments) {
+    QProcess *gitProcess = gitRun(arguments);
+    return gitProcess->exitCode();
+}
+
+QProcess *GitInterface::gitRun(const QStringList &arguments) {
+    QProcess *gitProcess = new QProcess(this);
+    gitProcess->deleteLater();
+    // TODO absolute path?
+    gitProcess->start("/usr/bin/git", arguments, QIODevice::ReadOnly);
+    // TODO blocking
+    bool success = gitProcess->waitForFinished(3000);
+    if (!success) {
+        qDebug() << "process error; prog=" << gitProcess->program()
+                 << " args=" << gitProcess->arguments() << " "
+                 << " error=" << gitProcess->error();
+    }
+    return gitProcess;
 }
 
 QStringList GitInterface::argStart(const QUrl &url) {

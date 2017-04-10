@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QFileSystemWatcher>
 #include <QObject>
+#include <QProcess>
 #include <QUrl>
 
 struct BranchEntry {
@@ -38,6 +39,14 @@ struct StatusEntry {
         : name(n), indexStatus(x), treeStatus(y), renamedFrom(r) {}
 };
 
+struct StashEntry {
+    QString selector;
+    QString subject;
+
+    StashEntry() {} // needed by Q_DECLARE_METATYPE
+    StashEntry(QString se, QString su) : selector(se), subject(su) {}
+};
+
 /**
  * @brief Communication interface between Git repo and application.
  */
@@ -53,15 +62,19 @@ class GitInterface : public QObject {
   signals:
     void updatedBranches(const QList<BranchEntry> &branches);
     void updatedStatus(const QList<StatusEntry> &statuses);
+    void updatedStashes(const QList<StashEntry> &stashes);
     void repoChanged();
 
   private:
     void updateBranches(const QUrl &url);
     void updateStatus(const QUrl &url);
+    void updateStashes(const QUrl &url);
 
     QUrl gitRoot(const QUrl &url);
 
-    QString run(const QStringList &arguments);
+    QString gitOutput(const QStringList &arguments);
+    int gitExitCode(const QStringList &arguments);
+    QProcess *gitRun(const QStringList &arguments);
 
     static QStringList argStart(const QUrl &url);
     static FileStatus letterToStatus(const QChar &c);
@@ -75,5 +88,6 @@ class GitInterface : public QObject {
 
 Q_DECLARE_METATYPE(BranchEntry)
 Q_DECLARE_METATYPE(StatusEntry)
+Q_DECLARE_METATYPE(StashEntry)
 
 #endif // GITINTERFACE_H
