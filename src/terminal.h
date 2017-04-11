@@ -23,13 +23,9 @@
 #include <QDebug>
 #include <QDir>
 #include <QQueue>
-#include <QShowEvent>
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include <KIO/Job>
-#include <KIO/JobUiDelegate>
-#include <KJobWidgets>
 #include <KParts/ReadOnlyPart>
 #include <KPluginFactory>
 #include <KPluginLoader>
@@ -37,14 +33,9 @@
 #include <KShell>
 #include <kde_terminal_interface.h>
 
-namespace KIO {
-    class StatJob;
-}
-
 namespace KParts {
     class ReadOnlyPart;
 }
-class KJob;
 
 /**
  * @brief Shows the terminal.
@@ -56,7 +47,7 @@ class TerminalWidget : public QWidget {
 
   public:
     explicit TerminalWidget(QWidget *parent = 0)
-        : QWidget(parent), m_clearTerminal(true), m_mostLocalUrlJob(0), m_layout(0), m_terminal(0),
+        : QWidget(parent), m_clearTerminal(true), m_layout(0), m_terminal(0),
           m_terminalWidget(0), m_konsolePart(0), m_konsolePartCurrentDirectory(),
           m_sendCdToTerminalHistory() {
         m_layout = new QVBoxLayout(this);
@@ -102,17 +93,17 @@ class TerminalWidget : public QWidget {
     }
 
     void changeUrl(const QUrl &url) {
-        if (!url.isValid()) {
+        if (!m_terminal) {
+            qDebug() << "not initialized";
             return;
         }
 
-        const bool sendInput =
-            m_terminal && (m_terminal->foregroundProcessId() == -1) && isVisible();
-        if (sendInput) {
-            changeDir(url);
+        if (!url.isValid() || !url.isLocalFile()) {
+            qDebug() << "not valid local URL: "<<url;
+            return;
         }
 
-        return;
+        sendCdToTerminal(url.toLocalFile());
     }
 
   signals:
@@ -126,15 +117,6 @@ class TerminalWidget : public QWidget {
   protected:
 
   private slots:
-    void slotMostLocalUrlResult(KJob *job) {
-        KIO::StatJob *statJob = static_cast<KIO::StatJob *>(job);
-        const QUrl url = statJob->mostLocalUrl();
-        if (url.isLocalFile()) {
-            sendCdToTerminal(url.toLocalFile());
-        }
-
-        m_mostLocalUrlJob = 0;
-    }
 
     void slotKonsolePartCurrentDirectoryChanged(const QString &dir) {
         m_konsolePartCurrentDirectory = QDir(dir).canonicalPath();
@@ -153,22 +135,6 @@ class TerminalWidget : public QWidget {
     }
 
   private:
-    void changeDir(const QUrl &url) {
-        delete m_mostLocalUrlJob;
-        m_mostLocalUrlJob = 0;
-
-        if (url.isLocalFile()) {
-            sendCdToTerminal(url.toLocalFile());
-        } else {
-            m_mostLocalUrlJob = KIO::mostLocalUrl(url, KIO::HideProgressInfo);
-            if (m_mostLocalUrlJob->uiDelegate()) {
-                KJobWidgets::setWindow(m_mostLocalUrlJob, this);
-            }
-            connect(m_mostLocalUrlJob, &KIO::StatJob::result, this,
-                    &TerminalWidget::slotMostLocalUrlResult);
-        }
-    }
-
     void sendCdToTerminal(const QString &dir) {
         if (dir == m_konsolePartCurrentDirectory) {
             m_clearTerminal = false;
@@ -206,7 +172,6 @@ class TerminalWidget : public QWidget {
 
   private:
     bool m_clearTerminal;
-    KIO::StatJob *m_mostLocalUrlJob;
 
     QVBoxLayout *m_layout;
     TerminalInterface *m_terminal;
