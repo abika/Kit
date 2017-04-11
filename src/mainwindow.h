@@ -31,6 +31,7 @@ namespace {
 }
 
 struct StatusEntry;
+class TerminalWidget;
 
 class MainWindow : public KXmlGuiWindow {
     Q_OBJECT
@@ -44,7 +45,12 @@ class MainWindow : public KXmlGuiWindow {
 
     void updateStatusBar(const QList<StatusEntry> &statusList);
 
+protected:
+    /** @see KMainWindow::queryClose() */
+    virtual bool queryClose() override;
+
   private:
+    TerminalWidget *m_terminal;
     KStatusNotifierItem *m_systrayItem;
 };
 

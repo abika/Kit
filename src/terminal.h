@@ -66,6 +66,30 @@ class TerminalWidget : public QWidget {
 
     virtual ~TerminalWidget() {}
 
+    void initialize(const QString &path) {
+        m_clearTerminal = true;
+        KPluginFactory *factory = 0;
+        KService::Ptr service = KService::serviceByDesktopName(QStringLiteral("konsolepart"));
+        if (service) {
+            factory = KPluginLoader(service->library()).factory();
+        }
+        m_konsolePart = factory ? (factory->create<KParts::ReadOnlyPart>(this)) : 0;
+        if (m_konsolePart) {
+            connect(m_konsolePart, &KParts::ReadOnlyPart::destroyed, this,
+                    &TerminalWidget::terminalExited);
+            m_terminalWidget = m_konsolePart->widget();
+            m_layout->addWidget(m_terminalWidget);
+            m_terminal = qobject_cast<TerminalInterface *>(m_konsolePart);
+        }
+        if (m_terminal) {
+            m_terminal->showShellInDir(path);
+            m_terminalWidget->setFocus();
+            connect(m_konsolePart, SIGNAL(currentDirectoryChanged(QString)), this,
+                    SLOT(slotKonsolePartCurrentDirectoryChanged(QString)));
+            slotKonsolePartCurrentDirectoryChanged(path);
+        }
+    }
+
   public slots:
     void terminalExited() {
         m_terminal = 0;
@@ -100,40 +124,6 @@ class TerminalWidget : public QWidget {
     void urlChanged(const QUrl &url);
 
   protected:
-    /**
-     * Initialize on first show
-     */
-    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE {
-        if (event->spontaneous()) {
-            QWidget::showEvent(event);
-            return;
-        }
-
-        if (!m_terminal) {
-            m_clearTerminal = true;
-            KPluginFactory *factory = 0;
-            KService::Ptr service = KService::serviceByDesktopName(QStringLiteral("konsolepart"));
-            if (service) {
-                factory = KPluginLoader(service->library()).factory();
-            }
-            m_konsolePart = factory ? (factory->create<KParts::ReadOnlyPart>(this)) : 0;
-            if (m_konsolePart) {
-                connect(m_konsolePart, &KParts::ReadOnlyPart::destroyed, this,
-                        &TerminalWidget::terminalExited);
-                m_terminalWidget = m_konsolePart->widget();
-                m_layout->addWidget(m_terminalWidget);
-                m_terminal = qobject_cast<TerminalInterface *>(m_konsolePart);
-            }
-        }
-        if (m_terminal) {
-            m_terminal->showShellInDir(".");
-            m_terminalWidget->setFocus();
-            connect(m_konsolePart, SIGNAL(currentDirectoryChanged(QString)), this,
-                    SLOT(slotKonsolePartCurrentDirectoryChanged(QString)));
-        }
-
-        QWidget::showEvent(event);
-    }
 
   private slots:
     void slotMostLocalUrlResult(KJob *job) {

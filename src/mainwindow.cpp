@@ -27,6 +27,8 @@
 #include <QStatusBar>
 
 #include <KActionCollection>
+#include <KConfigGroup>
+#include <KSharedConfig>
 #include <KStandardAction>
 
 MainWindow::MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent) {
@@ -39,12 +41,12 @@ MainWindow::MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent) {
             this, &MainWindow::updateStatusBar);
 
     // terminal
-    TerminalWidget *terminal = new TerminalWidget(this);
-    connect(terminal, &TerminalWidget::urlChanged,
+    m_terminal = new TerminalWidget(this);
+    connect(m_terminal, &TerminalWidget::urlChanged,
             gitInterface, &GitInterface::startUpdate);
-    connect(terminal, &TerminalWidget::urlChanged, this, &MainWindow::setTitle);
-    connect(gitInterface, &GitInterface::repoChanged, terminal, &TerminalWidget::updateCommandLine);
-    setCentralWidget(terminal);
+    connect(m_terminal, &TerminalWidget::urlChanged, this, &MainWindow::setTitle);
+    connect(gitInterface, &GitInterface::repoChanged, m_terminal, &TerminalWidget::updateCommandLine);
+    setCentralWidget(m_terminal);
 
     // dock widgets
     BranchWidget *branchWidget = new BranchWidget(this);
@@ -75,9 +77,9 @@ MainWindow::MainWindow::MainWindow(QWidget *parent) : KXmlGuiWindow(parent) {
     m_systrayItem->setIconByName(QStringLiteral("svn-commit"));
 
     // init
-    const QUrl currentDir = QUrl::fromLocalFile(QDir::currentPath());
-    gitInterface->startUpdate(currentDir);
-    setTitle(currentDir);
+    const QString lastPath = KSharedConfig::openConfig()->group("Main")
+                             .readEntry("Last Directory", QDir::currentPath());
+    m_terminal->initialize(lastPath);
 
     setupGUI(Default);
 }
@@ -111,4 +113,12 @@ void MainWindow::updateStatusBar(const QList<StatusEntry> &statusList) {
     }
 
     this->statusBar()->showMessage(text);
+}
+
+bool MainWindow::queryClose() {
+    // save properies
+    KConfigGroup group = KSharedConfig::openConfig()->group("Main");
+    group.writeEntry("Last Directory", m_terminal->currentDirectory());
+
+    return true;
 }

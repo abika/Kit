@@ -28,6 +28,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
     KIO
     Parts
     Notifications
+    Config
 )
 
 # run moc automatically
@@ -68,6 +69,7 @@ target_link_libraries(main_EXE
     KF5::KIOFileWidgets
     KF5::Parts
     KF5::Notifications
+    KF5::ConfigCore
     )
 
 install(TARGETS main_EXE ${INSTALL_TARGETS_DEFAULT_ARGS})
